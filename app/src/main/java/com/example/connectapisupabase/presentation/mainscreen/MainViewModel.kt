@@ -1,5 +1,6 @@
 package com.example.connectapisupabase.presentation.mainscreen
 
+import android.provider.ContactsContract.CommonDataKinds.Email
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -39,10 +40,10 @@ class MainViewModel : ViewModel() {
     val books: StateFlow<List<Book>> get() = _books.asStateFlow()
 
     // Метод для аутентификации пользователя
-    fun signIn() {
+    fun signIn(email: String) {
         _resultState.value = ResultState.Loading // Устанавливаем состояние загрузки
         viewModelScope.launch {
-            apiService.signIn(UserAuth("test@test.ru", "11111111")).enqueue(object :
+            apiService.signIn(UserAuth(email, "11111111")).enqueue(object :
                 Callback<ResponsesAuth> {
                 override fun onResponse(
                     call: Call<ResponsesAuth>,
@@ -82,12 +83,12 @@ class MainViewModel : ViewModel() {
     }
 
     // Метод для регистрации нового пользователя
-    fun signUp() {
+    fun signUp(email:  String) {
         _resultState.value = ResultState.Loading // Устанавливаем состояние загрузки
         viewModelScope.launch {
             apiService.signUp(
                 UserRequest(
-                    email = "newtest@test.ru",
+                    email = email,
                     password = "11111111",
                     passwordConfirm = "11111111"
                 )
