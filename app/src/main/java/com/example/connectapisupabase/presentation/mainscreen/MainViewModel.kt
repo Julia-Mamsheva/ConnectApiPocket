@@ -9,8 +9,11 @@ import com.example.connectapisupabase.data.api.ApiService
 import com.example.connectapisupabase.data.model.Book
 import com.example.connectapisupabase.data.model.BooksItems
 import com.example.connectapisupabase.data.model.ErrorResponse
+import com.example.connectapisupabase.data.model.OtpResponses
 import com.example.connectapisupabase.data.model.ResponsesAuth
 import com.example.connectapisupabase.data.model.UserResponse
+import com.example.connectapisupabase.domain.model.OTPAuth
+import com.example.connectapisupabase.domain.model.OtpRequest
 import com.example.connectapisupabase.domain.model.UserAuth
 import com.example.connectapisupabase.domain.model.UserRequest
 import com.example.connectapisupabase.domain.state.ResultState
@@ -29,6 +32,7 @@ class MainViewModel : ViewModel() {
 
     // Хранит токен аутентификации
     private val _token = mutableStateOf("")
+    private val _otp = mutableStateOf("")
 
     // Состояние результата операций
 
@@ -58,10 +62,10 @@ class MainViewModel : ViewModel() {
                         }
 
                         // Обработка ошибки, если запрос не успешен
-                        response.errorBody()?.string().let {
+                        response.errorBody()?.let {
                             try {
                                 val message =
-                                    Gson().fromJson(it, ErrorResponse::class.java).message
+                                    Gson().fromJson(it.string(), ErrorResponse::class.java).message
                                 Log.e("SignIN", "Error message: $message")
                                 _resultState.value = ResultState.Error(message)
                             } catch (e: Exception) {
@@ -107,10 +111,10 @@ class MainViewModel : ViewModel() {
                                 _resultState.value = ResultState.Success("Success")
                                 Log.d("SignUP", id)
                             }
-                            response.errorBody()?.string().let {
+                            response.errorBody()?.let {
                                 try {
                                     val message =
-                                        Gson().fromJson(it, ErrorResponse::class.java).message
+                                        Gson().fromJson(it.string(), ErrorResponse::class.java).message
                                     Log.e("getBooks", "Error message: $message")
                                     _resultState.value = ResultState.Error(message)
                                 } catch (e: Exception) {
@@ -152,10 +156,10 @@ class MainViewModel : ViewModel() {
                             _resultState.value = ResultState.Success("Success")
                         }
                         // Обработка ошибки, если запрос не успешен
-                        response.errorBody()?.string().let {
+                        response.errorBody()?.let {
                             try {
                                 val message =
-                                    Gson().fromJson(it, ErrorResponse::class.java).message
+                                    Gson().fromJson(it.string(), ErrorResponse::class.java).message
                                 Log.e("getBooks", "Error message: $message")
                                 _resultState.value = ResultState.Error(message)
                             } catch (e: Exception) {
@@ -177,6 +181,68 @@ class MainViewModel : ViewModel() {
                 }
             })
         }
+    }
+
+    fun sendOtp(email: String) {
+        apiService.getOTP(OtpRequest(email)).enqueue(object : Callback<OtpResponses> {
+            override fun onResponse(call: Call<OtpResponses>, response: Response<OtpResponses>) {
+                // Если запрос успешен, сохраняем _otp и обновляем состояние
+                try {
+                    response.body()?.let {
+                        _otp.value = response.body()!!.otpId
+                        Log.i("sendOtp", response.body()!!.otpId)
+                        _resultState.value = ResultState.Success(response.body()!!.otpId)
+                    }
+                    if (!response.isSuccessful) {// Обработка ошибки, если запрос не успешен
+                        response.errorBody()?.let {
+                            val message =
+                                Gson().fromJson(it.string(), ErrorResponse::class.java).message
+                            Log.e("sendOtp", "Error message: $message")
+                            _resultState.value = ResultState.Error(message)
+                        }
+                    }
+                } catch (ex: Exception) {
+                    Log.e("sendOtp", "Error message: ${ex.message}")
+
+                }
+            }
+
+            override fun onFailure(call: Call<OtpResponses>, t: Throwable) {
+                // Обработка ошибки при выполнении запроса
+                _resultState.value = ResultState.Error(t.message.toString())
+                Log.e("sendOtp", t.message.toString())
+            }
+        })
+    }
+
+    fun sigInWithOtp(password: String) {
+        apiService.signInWithOTP(OTPAuth(_otp.value, password))
+            .enqueue(object : Callback<ResponsesAuth> {
+                override fun onResponse(
+                    call: Call<ResponsesAuth>,
+                    response: Response<ResponsesAuth>,
+                ) { // Если запрос успешен, сохраняем _otp и обновляем состояние
+                    response.body()?.let {
+                        _otp.value = response.body()!!.token
+                        Log.i("sigInWithOtp", response.body()!!.token)
+                        _resultState.value = ResultState.Success(response.body()!!.token)
+                    }
+                    // Обработка ошибки, если запрос не успешен
+                    response.errorBody()?.let {
+                        val message =
+                            Gson().fromJson(it.string(), ErrorResponse::class.java).message
+                        Log.e("sigInWithOtp", "Error message: $message")
+                        _resultState.value = ResultState.Error(message)
+                    }
+
+                }
+
+                override fun onFailure(call: Call<ResponsesAuth>, t: Throwable) {
+                    // Обработка ошибки при выполнении запроса
+                    _resultState.value = ResultState.Error(t.message.toString())
+                    Log.e("sigInWithOtp", t.message.toString())
+                }
+            })
     }
 
     // Метод для получения URL изображения книги

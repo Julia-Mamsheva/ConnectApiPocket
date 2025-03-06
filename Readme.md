@@ -1,6 +1,12 @@
-# Установка и запуск PocketBase
+# PocketBase
+## Установка и запуск 
 1. Загрузите готовый исполняемый файл для вашей платформы со страницы [релиза]([https://ru.wikipedia.org/wiki/Программное_обеспечение](https://github.com/pocketbase/pocketbase/releases));
 2. После загрузки извлеките архив и запустите ```./pocketbase``` в извлеченном каталоге
+
+## Настройка OTP 
+1. В настройках ```User-collections``` перейти на вкладку ```Options``` и включить ```One-time password (OTP)```
+2. Далее в ```Setting``` системы перейти на  вкладку ```Mail setting``` включить параметр ```Use SMTP mail server``` (к примеру, можно использовать
+mail.ru)
  
 # Book Management App
 

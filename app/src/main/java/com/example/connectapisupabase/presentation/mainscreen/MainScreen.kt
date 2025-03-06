@@ -43,7 +43,8 @@ fun MainScreen(viewModel: MainViewModel = viewModel()) {
     val result = viewModel.resultState.collectAsState()
     val books = viewModel.books.collectAsState()
 
-    var email = remember { mutableStateOf("test@test.ru") }
+    var email = remember { mutableStateOf("jukudryash@gmail.ru") }
+    var pass = remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,6 +68,21 @@ fun MainScreen(viewModel: MainViewModel = viewModel()) {
             onClick = { viewModel.getBooks() }
         ) {
             Text("Вывести список")
+        }
+
+        Text("Password of email")
+        Spacer(Modifier.height(10.dp))
+        TextField(pass.value, { pass.value = it })
+
+        Button(
+            onClick = { viewModel.sendOtp(email.value) }
+        ) {
+            Text("Отправить пароль на почту")
+        }
+        Button(
+            onClick = { viewModel.sigInWithOtp(pass.value) }
+        ) {
+            Text("Войти с помощью OTP")
         }
         when (result.value) {
             is ResultState.Error -> {
