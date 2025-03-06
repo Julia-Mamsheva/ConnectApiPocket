@@ -50,22 +50,24 @@ class MainViewModel : ViewModel() {
                     response: Response<ResponsesAuth>,
                 ) {
                     try {
-                        if (response.isSuccessful) {
-                            // Если запрос успешен, сохраняем токен и обновляем состояние
+                        // Если запрос успешен, сохраняем токен и обновляем состояние
+                        response.body()?.let {
                             _token.value = response.body()!!.token
                             _resultState.value = ResultState.Success("Success")
                             Log.d("SignIN", _token.value)
-                        } else {
-                            // Обработка ошибки, если запрос не успешен
-                            response.errorBody()?.string().let {
-                                try {
-                                    val message = Gson().fromJson(it, ErrorResponse::class.java).message
-                                    Log.e("SignIN", "Error message: $message")
-                                    _resultState.value = ResultState.Error(message)
-                                } catch (e: Exception) {
-                                    Log.e("SignIN", "Failed to parse error response: ${e.message}")
-                                }
+                        }
+
+                        // Обработка ошибки, если запрос не успешен
+                        response.errorBody()?.string().let {
+                            try {
+                                val message =
+                                    Gson().fromJson(it, ErrorResponse::class.java).message
+                                Log.e("SignIN", "Error message: $message")
+                                _resultState.value = ResultState.Error(message)
+                            } catch (e: Exception) {
+                                Log.e("SignIN", "Failed to parse error response: ${e.message}")
                             }
+
                         }
                     } catch (exception: Exception) {
                         _resultState.value = ResultState.Error(exception.message.toString())
@@ -83,7 +85,7 @@ class MainViewModel : ViewModel() {
     }
 
     // Метод для регистрации нового пользователя
-    fun signUp(email:  String) {
+    fun signUp(email: String) {
         _resultState.value = ResultState.Loading // Устанавливаем состояние загрузки
         viewModelScope.launch {
             apiService.signUp(
@@ -99,21 +101,25 @@ class MainViewModel : ViewModel() {
                         response: Response<UserResponse>,
                     ) {
                         try {
-                            if (response.isSuccessful) {
-                                // Если запрос успешен, сохраняем ID пользователя и обновляем состояние
-                                val id = response.body()!!.id
+                            // Если запрос успешен, сохраняем список книг и обновляем состояние
+                            response.body()?.let {
+                                val id = it.id
                                 _resultState.value = ResultState.Success("Success")
                                 Log.d("SignUP", id)
-                            } else {
-                                response.errorBody()?.string().let {
-                                    try {
-                                        val message = Gson().fromJson(it, ErrorResponse::class.java).message
-                                        Log.e("getBooks", "Error message: $message")
-                                        _resultState.value = ResultState.Error(message)
-                                    } catch (e: Exception) {
-                                        Log.e("getBooks", "Failed to parse error response: ${e.message}")
-                                    }
+                            }
+                            response.errorBody()?.string().let {
+                                try {
+                                    val message =
+                                        Gson().fromJson(it, ErrorResponse::class.java).message
+                                    Log.e("getBooks", "Error message: $message")
+                                    _resultState.value = ResultState.Error(message)
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "getBooks",
+                                        "Failed to parse error response: ${e.message}"
+                                    )
                                 }
+
                             }
                         } catch (exception: Exception) {
                             _resultState.value = ResultState.Error(exception.message.toString())
@@ -137,23 +143,25 @@ class MainViewModel : ViewModel() {
             apiService.getBooks(_token.value).enqueue(object : Callback<BooksItems> {
                 override fun onResponse(call: Call<BooksItems>, response: Response<BooksItems>) {
                     try {
-                        if (response.isSuccessful) {
-                            // Если запрос успешен, сохраняем список книг и обновляем состояние
+                        // Если запрос успешен, сохраняем список книг и обновляем состояние
+                        response.body()?.let {
                             _books.value = response.body()!!.items
                             _books.value.forEach {
                                 Log.d("Books", it.title)
                             }
                             _resultState.value = ResultState.Success("Success")
-                        } else {
-                            // Обработка ошибки, если запрос не успешен
-                            response.errorBody()?.string().let {
-                                try {
-                                    val message = Gson().fromJson(it, ErrorResponse::class.java).message
-                                    Log.e("getBooks", "Error message: $message")
-                                    _resultState.value = ResultState.Error(message)
-                                } catch (e: Exception) {
-                                    Log.e("getBooks", "Failed to parse error response: ${e.message}")
-                                }
+                        }
+                        // Обработка ошибки, если запрос не успешен
+                        response.errorBody()?.string().let {
+                            try {
+                                val message =
+                                    Gson().fromJson(it, ErrorResponse::class.java).message
+                                Log.e("getBooks", "Error message: $message")
+                                _resultState.value = ResultState.Error(message)
+                            } catch (e: Exception) {
+                                Log.e(
+                                    "getBooks", "Failed to parse error response: ${e.message}"
+                                )
                             }
                         }
                     } catch (ex: Exception) {
@@ -173,7 +181,8 @@ class MainViewModel : ViewModel() {
 
     // Метод для получения URL изображения книги
     fun getImage(book: Book): String {
-        val imageUrl = "http://10.0.2.2:8090/api/files/${book.collectionId}/${book.id}/${book.image}"
+        val imageUrl =
+            "http://10.0.2.2:8090/api/files/${book.collectionId}/${book.id}/${book.image}"
         Log.i("Image", imageUrl)
         return imageUrl
     }
